@@ -5,6 +5,7 @@ import jinja2
 import webapp2
 import hashlib
 import hmac
+from string import letters
 from google.appengine.ext import ndb
 SECRET = 'imsosecret'
 #template loading code, locations of the templates
@@ -99,9 +100,13 @@ class User(ndb.Model):
 		return User.get_by_id(uid, parent = users_key())
 
 	@classmethod
+	# def by_name(cls, name):
+	# 	u = User.query().filter(ndb.GenericProperty('name', name)).get()
+
 	def by_name(cls, name):
-		u = User.all().filter('name =', name).get()
-		return u
+		user = User.query(User.name==name).fetch(1)
+	# 	for u in user:
+	# 		return u	
 
 	@classmethod
 	def register(cls, name, pw, email = None):

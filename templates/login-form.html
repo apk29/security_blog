@@ -1,33 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
-
-  <head>
-    <title>Login</title>
-    <style type="text/css">
+<head>
+   <title>Login</title>
+   <style type="text/css">
       .label {text-align: right}
       .error {color: gray}
-    </style>
-
-  </head>
-
-  <body>
-    <h2>Login</h2>
-    <form method="post">
+   </style>
+</head>
+<body>
+   <h2>Login</h2>
+   <form method="post">
       <label for="username">Username</label>
-    <input type="text" name="username" value="{{username}}">
-    <br>
-        <label for="password">Password</label>
-    <input type="password" name="password" value="" required>
-
+      <input type="text" name="username" value="{{username}}">
+      <br>
+      <label for="password">Password</label>
+      <input type="password" name="password" value="" required>
       <div class="error">
-        {{error}}
+         {{error}}
       </div>
       <br>
       <input type="submit">
-    </form>
-    <br>
-    <hr>
-  </body>
-
-
+   </form>
+   <br>
+   <hr>
+</body>
 {% endblock %}
