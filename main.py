@@ -7,28 +7,26 @@ import hashlib
 import hmac
 from string import letters
 from google.appengine.ext import ndb
-SECRET = 'imsosecret'
+
+SECRET = 'thecatinthehat'
 #template loading code, locations of the templates
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
 								autoescape = True)
 
-def hash_str(s):
-	return hmac.new(SECRET, s).hexdigest()
 
-def make_secure_val(s):
-	return "%s|%s" % (s, hash_str(s))
 
-#match security
-def check_secure_val(h):
-	val = h.split('|')[0]
-	if h == make_secure_val(val):
-		return val
-
-#takes template name and dictionary of parameters to substitue into the template       
 def render_str(template, **params):
-	t = jinja_env.get_template(template)
-	return t.render(params)
+    t = jinja_env.get_template(template)
+    return t.render(params)
+
+def make_secure_val(val):
+    return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+
+def check_secure_val(secure_val):
+    val = secure_val.split('|')[0]
+    if secure_val == make_secure_val(val):
+        return val
 
 class BlogHandler(webapp2.RequestHandler):
 	#code to automatically write or type self.response.out.write
@@ -88,7 +86,7 @@ def valid_pw(name, password, h):
 	return h == make_pw_hash(name, password, salt)
 
 def users_key(group = 'default'):
-	return ndb.Key.from_path('users', group)
+	return ndb.Key('users', group)
 
 class User(ndb.Model):
 	name = ndb.StringProperty(required = True)
@@ -102,11 +100,11 @@ class User(ndb.Model):
 	@classmethod
 	# def by_name(cls, name):
 	# 	u = User.query().filter(ndb.GenericProperty('name', name)).get()
-
+	# 	return u
 	def by_name(cls, name):
 		user = User.query(User.name==name).fetch(1)
-	# 	for u in user:
-	# 		return u	
+		for u in user:
+			return u	
 
 	@classmethod
 	def register(cls, name, pw, email = None):
