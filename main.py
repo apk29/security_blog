@@ -1,6 +1,7 @@
 
 import os
 import re
+import random
 import jinja2
 import webapp2
 import hashlib
@@ -8,7 +9,7 @@ import hmac
 from string import letters
 from google.appengine.ext import ndb
 
-SECRET = 'thecatinthehat'
+secret = 'thecatinthehat'
 #template loading code, locations of the templates
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -47,12 +48,13 @@ class BlogHandler(webapp2.RequestHandler):
 		self.response.headers.add_header(
 			'Set-Cookie',
 			'%s=%s; Path=/' % (name, cookie_val))
+
 	def read_secure_cookie(self, name):
 		cookie_val = self.request.cookies.get(name)
 		return cookie_val and check_secure_val(cookie_val)
 
 	def login(self, user):
-		self.set_secure_cookie('user_id', str(user.key().id()))
+		self.set_secure_cookie('user_id', str(user.key.id()))
 
 	def logout(self):
 		self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
@@ -125,7 +127,7 @@ class User(ndb.Model):
 def blog_key(name = 'default'):
 	return ndb.Key('blogs', name)
 
-#This creates the entities the database within the datastore
+#This creates the entities in the database within the datastore
 class Post(ndb.Model):
 	subject = ndb.StringProperty(required = True)
 	content = ndb.TextProperty(required = True)
@@ -254,7 +256,7 @@ class Register(Signup):
 			u.put()
 
 			self.login(u)
-			self.redirect('/blog')
+			self.redirect('/unit3/welcome')
 
 class Login(BlogHandler):
 	def get(self):
@@ -267,7 +269,7 @@ class Login(BlogHandler):
 		u = User.login(username, password)
 		if u:
 			self.login(u)
-			self.redirect('/blog')
+			self.redirect('/unit3/welcome')
 		else:
 			msg = 'Invalid login'
 			self.render('login-form.html', error = msg)
@@ -275,7 +277,7 @@ class Login(BlogHandler):
 class Logout(BlogHandler):
 	def get(self):
 		self.logout()
-		self.redirect('/blog')
+		self.redirect('/signup')
 
 class Unit3Welcome(BlogHandler):
 	def get(self):
