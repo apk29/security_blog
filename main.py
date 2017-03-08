@@ -124,8 +124,8 @@ class User(ndb.Model):
 
 #Login in Method
 	@classmethod
-	def login(cls, name, pw):
-		u = cls.by_name(name)
+	def login(self, name, pw):
+		u = self.by_name(name)
 		if u and valid_pw(name, pw, u.pw_hash):
 			return u
   
@@ -197,8 +197,8 @@ class DeletePost(BlogHandler):
 			if not post:
 				self.error(404)
 				return
-			if post and (post.author.id() == self.user.key.id()):
-			# if (post.author == self.user.name):
+			# if post and (post.author.id() == self.user.key.id()):
+			if (post.author == self.user.name):
 				post.key.delete()
 				self.render("deletepost.html")
 				time.sleep(0.1)
