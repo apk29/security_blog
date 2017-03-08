@@ -90,32 +90,39 @@ def valid_pw(name, password, h):
 def users_key(group = 'default'):
 	return ndb.Key('users', group)
 
+#stores user info
 class User(ndb.Model):
 	name = ndb.StringProperty(required = True)
 	pw_hash = ndb.StringProperty(required = True)
 	email = ndb.StringProperty()
 
+#Returns user id from User object
 	@classmethod
-	def by_id(cls, uid):
+	def by_id(self, uid):
 		return User.get_by_id(uid, parent = users_key())
 
+#Fetchs users by name from the User object
 	@classmethod
-	# def by_name(cls, name):
-	# 	u = User.query().filter(ndb.GenericProperty('name', name)).get()
+	# def by_name(self, name):
+	# 	u = User.query().filter(ndb.GenericProperty('name'), name).get()
 	# 	return u
+
+	#alternative method to the above code
 	def by_name(cls, name):
 		user = User.query(User.name==name).fetch(1)
 		for u in user:
 			return u	
 
+#Creates the new user in the User object.
 	@classmethod
-	def register(cls, name, pw, email = None):
+	def register(self, name, pw, email = None):
 		pw_hash = make_pw_hash(name, pw)
 		return User(parent = users_key(),
 					name = name,
 					pw_hash = pw_hash,
 					email = email)
 
+#Login in Method
 	@classmethod
 	def login(cls, name, pw):
 		u = cls.by_name(name)
@@ -127,12 +134,15 @@ class User(ndb.Model):
 def blog_key(name = 'default'):
 	return ndb.Key('blogs', name)
 
-#This creates the entities in the database within the datastore
+#This creates the attributes within the datastore
 class Post(ndb.Model):
 	subject = ndb.StringProperty(required = True)
 	content = ndb.TextProperty(required = True)
 	created = ndb.DateTimeProperty(auto_now_add = True)
+	author = ndb.KeyProperty(kind="User")
 	last_modified = ndb.DateTimeProperty(auto_now = True)
+	
+
 
 #keeps line separatated when typing in new blog with spacing  
 	def render(self):
@@ -177,6 +187,27 @@ class NewPost(BlogHandler):
 			error = "subject and content, please!"
 			self.render("newpost.html", subject=subject, content=content, error=error)
 
+class DeletePost(BlogHandler):
+	def get(self, post_id):
+		if not self.user:
+			return self.redirect("/login")
+		else:
+			key = ndb.Key('Post', int(post_id), parent=blog_key())
+			post = key.get()
+			if not post:
+				self.error(404)
+				return
+			if post and (post.author.id() == self.user.key.id()):
+			# if (post.author == self.user.name):
+				post.key.delete()
+				self.render("deletepost.html")
+				time.sleep(0.1)
+				self.render("post.html")
+			else:
+				self.render("errorpost.html")
+		
+			
+		
 ###### Unit 2 HW's
 class Rot13(BlogHandler):
 	def get(self):
@@ -305,6 +336,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
 							   ('/login', Login),
 							   ('/logout', Logout),
 							   ('/unit3/welcome', Unit3Welcome),
+							   ('/blog/deletepost/([0-9]+)', DeletePost),
 							   ],
 							  debug=True)
 	

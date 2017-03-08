@@ -11,5 +11,11 @@
 
   <div class="post-content">
     {{p._render_text | safe}}
+    <div class="PostButtons">
+      <!-- <a class= "btn btn-primary btn-default-md" href="/blog/editpost/{{p.key.id()}}">redo</a> -->
+     <a class= "btn btn-primary btn-default-lg" href="/blog/deletepost/{{p.key.id()}}">erase</a>
+      <!-- <a class= "btn btn-primary btn-default-md" href="/blog/newcomment/{{p.key.id()}}">say something</a>
+      <a class= "btn btn-primary btn-default-md" href="/blog/like/{{p.key.id()}}">i like it!</a>
+      <a class= "btn btn-primary btn-default-md" href="/blog/unlike/{{p.key.id()}}">i don't like it!</a> -->
   </div>
 </div>
