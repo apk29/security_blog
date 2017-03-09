@@ -197,12 +197,13 @@ class DeletePost(BlogHandler):
 			if not post:
 				self.error(404)
 				return
-			# if post and (post.author.id() == self.user.key.id()):
-			if (post.author == self.user.name):
+			# if post and (post.author.() == self.user.name()):
+			if (post.author == self.user):
+			
 				post.key.delete()
 				self.render("deletepost.html")
 				time.sleep(0.1)
-				self.render("post.html")
+				self.redirect("post.html")
 			else:
 				self.render("errorpost.html")
 		
