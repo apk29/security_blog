@@ -197,8 +197,8 @@ class DeletePost(BlogHandler):
 			if not post:
 				self.error(404)
 				return
-			# if post and (post.author.() == self.user.name()):
-			if (post.author == self.user):
+			if post and (post.author.id() == self.user.name()):
+			# if (post.author == self.user):
 			
 				post.key.delete()
 				self.render("deletepost.html")
