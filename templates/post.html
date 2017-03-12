@@ -1,21 +1,20 @@
 <div class="post col-md-12">
-   <h3 class="post-heading">
-      <a href="/blog/deletepost/{{p.key.id()}}"
-      <div class="post-title">
-         {{p.subject}}</a>
-   </h3>
-   </div>
-   <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}}
-   </div>
-
+<div class="post-heading">
+     *<a href="/blog/deletepost/{{p.key.id()}}"
+   <div class="post-title">
+      {{p.subject}}</a>
+</div>
+</div>
+<div class="post-date">
+   {{p.created.strftime("%b %d, %Y")}}
+</div>
 <div class="post-content">
-   {{p._render_text | safe}}
-   <div class="PostButtons">
-      <a class= "btn btn-primary btn-default-md" href="/blog/editpost/{{p.key.id()}}">redo</a>
-      <a class= "btn btn-primary btn-default-lg" href="/blog/deletepost/{{p.key.id()}}">erase</a>
-      <a class= "btn btn-primary btn-default-md" href="/blog/newcomment/{{p.key.id()}}">say something</a>
-      <a class= "btn btn-primary btn-default-md" href="/blog/like/{{p.key.id()}}">i like it!</a>
-      <a class= "btn btn-primary btn-default-md" href="/blog/unlike/{{p.key.id()}}">i don't like it!</a>
-   </div>
+{{p._render_text | safe}}
+<div class="PostButtons">
+   <a class= "btn btn-info" href="/blog/editpost/{{p.key.id()}}">redo</a>
+   <a class= "btn btn-warning" href="/blog/deletepost/{{p.key.id()}}">erase me</a>
+   <a class= "btn btn-default" href="/blog/newcomment/{{p.key.id()}}">comment</a>
+   <a class= "btn btn-primary" href="/blog/like/{{p.key.id()}}">i like it!</a>
+   <a class= "btn btn-danger" href="/blog/unlike/{{p.key.id()}}">i don't like it!</a>
+</div>
 </div>
