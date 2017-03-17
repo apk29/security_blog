@@ -114,7 +114,24 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
+class Like(db.Model):
+    user_id = db.IntegerProperty(required=True)
+    post_id = db.IntegerProperty(required=True)
 
+    def getUserName(self):
+        user = User.by_id(self.user_id)
+        return user.name
+
+class Comment(db.Model):
+    user_id = db.IntegerProperty(required=True)
+    post_id = db.IntegerProperty(required=True)
+    comment = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    last_modified = db.DateTimeProperty(auto_now=True)
+
+    def getUserName(self):
+        user = User.by_id(self.user_id)
+        return user.name
 ##### blog stuff
 
 def blog_key(name = 'default'):
@@ -126,8 +143,10 @@ class Post(db.Model):
     user_id = db.IntegerProperty(required=True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
-    like = db.StringProperty()
-
+    
+    def gertUserName(self):
+        user = User.by_id(self.user_id)
+        return user.name
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -143,11 +162,68 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
 
+        comments = db.GqlQuery("select * from Comment where post_id = " +
+                               post_id + " order by created desc")
+        
+        likes = db.GqlQuery("select * from Like where post_id="+post_id)
+
+        if not post:
+            self.error(404)
+            return
+            #NOL = number of likes
+
+        error = self.request.get('error')
+        self.render("permalink.html", post = post, NOL = likes.count(),
+                     comments = comments, error=error)
+
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+
         if not post:
             self.error(404)
             return
 
-        self.render("permalink.html", post = post)
+       
+        c = ""
+
+        if(self.user):
+            # On clicking like, post-like value increases.
+            if(self.request.get('like') and
+               self.request.get('like') == "update"):
+                time.sleep(0.01)
+                likes = db.GqlQuery("select * from Like where post_id = " +
+                                    post_id + " and user_id = " +
+                                    str(self.user.key().id()))
+
+                if self.user.key().id() == post.user_id:
+                    self.redirect("/blog/" + post_id +
+                                  "?error=You cannot like your " +
+                                  "post.!!")
+                    return
+                elif likes.count() == 0:
+                    l = Like(parent=blog_key(), user_id=self.user.key().id(),
+                             post_id=int(post_id))
+                    l.put()
+            
+            if(self.request.get('comment')):
+                c = Comment(parent=blog_key(), user_id=self.user.key().id(),
+                            post_id=int(post_id),
+                            comment=self.request.get('comment'))
+                c.put()
+        else:
+            self.redirect("/login?error=You need to login before " +
+                          "performing edit, like or commenting.!!")
+            return
+
+        comments = db.GqlQuery("select * from Comment where post_id = " +
+                               post_id + "order by created desc")
+
+        likes = db.GqlQuery("select * from Like where post_id="+post_id)
+
+        self.render("permalink.html", post=post,
+                    comments=comments, NOL=likes.count(),
+                    new=c)
 
 class NewPost(BlogHandler):
     def get(self):
@@ -188,6 +264,60 @@ class DeletePost(BlogHandler):
             self.redirect("/login?error=You need to be logged, in order" +
                           " to delete your post!!")
 
+class DeleteComment(BlogHandler):
+
+    def get(self, post_id, comment_id):
+        if self.user:
+            key = db.Key.from_path('Comment', int(comment_id),
+                                   parent=blog_key())
+            c = db.get(key)
+            if c.user_id == self.user.key().id():
+                c.delete()
+                self.redirect("/blog/"+post_id+"?deleted_comment_id=" +
+                              comment_id)
+            else:
+                self.redirect("/blog/" + post_id + "?error=You don't have " +
+                              "access to delete this comment.")
+        else:
+            self.redirect("/login?error=You need to be logged, in order to " +
+                          "delete your comment!!")
+
+class EditComment(BlogHandler):
+    def get(self, post_id, comment_id):
+        if self.user:
+            key = db.Key.from_path('Comment', int(comment_id),
+                                   parent=blog_key())
+            c = db.get(key)
+            if c.user_id == self.user.key().id():
+                self.render("editcomment.html", comment=c.comment)
+            else:
+                self.redirect("/blog/" + post_id +
+                              "?error=You don't have access to edit this " +
+                              "comment.")
+        else:
+            self.redirect("/login?error=You need to be logged, in order to" +
+                          " edit your post!!")
+
+    def post(self, post_id, comment_id):
+        """
+            Updates post.
+        """
+        if not self.user:
+            self.redirect('/blog')
+
+        comment = self.request.get('comment')
+
+        if comment:
+            key = db.Key.from_path('Comment',
+                                   int(comment_id), parent=blog_key())
+            c = db.get(key)
+            c.comment = comment
+            c.put()
+            self.redirect('/blog/%s' % post_id)
+        else:
+            error = "subject and content, please!"
+            self.render("editpost.html", subject=subject,
+                        content=content, error=error)
 
 class EditPost(BlogHandler):
     def get(self, post_id):
@@ -357,6 +487,10 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/unit3/welcome', Unit3Welcome),
                                ('/blog/deletepost/([0-9]+)', DeletePost),
                                ('/blog/editpost/([0-9]+)', EditPost),
+                               ('/blog/deletecomment/([0-9]+)/([0-9]+)',
+                                DeleteComment),
+                               ('/blog/editcomment/([0-9]+)/([0-9]+)',
+                                EditComment),
                                ],
                               debug=True)
     
