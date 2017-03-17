@@ -1,20 +1,15 @@
-<div class="post col-md-12">
-<div class="post-heading">
-     *<a href="/blog/deletepost/{{p.key.id()}}"
-   <div class="post-title">
+<div class="post">
+  <div class="post-heading">
+     <a href="/blog/{{p.key().id()}}#" class="post-title">
       {{p.subject}}</a>
-</div>
-</div>
-<div class="post-date">
-   {{p.created.strftime("%b %d, %Y")}}
-</div>
-<div class="post-content">
-{{p._render_text | safe}}
-<div class="PostButtons">
-   <a class= "btn btn-info" href="/blog/editpost/{{p.key.id()}}">redo</a>
-   <a class= "btn btn-warning" href="/blog/deletepost/{{p.key.id()}}">erase me</a>
-   <a class= "btn btn-default" href="/blog/newcomment/{{p.key.id()}}">comment</a>
-   <a class= "btn btn-primary" href="/blog/like/{{p.key.id()}}">i like it!</a>
-   <a class= "btn btn-danger" href="/blog/unlike/{{p.key.id()}}">i don't like it!</a>
-</div>
+    </div>
+
+    <div class="post-date">
+      {{p.created.strftime("%b %d, %Y")}}
+    </div>
+  </div>
+
+  <div class="post-content">
+    {{p._render_text | safe}}
+  </div>
 </div>

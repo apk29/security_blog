@@ -11,7 +11,7 @@ body {
 
 .login-area {
     font-size: 13px;
-    color: gray;
+    color: #0000FF;
     position: absolute;
     top: 10px;
     right: 10px;
@@ -23,7 +23,7 @@ body {
 }
 
 .login-link:visited {
-    color: gray;
+    color: #A52A2A;
 }
 
 .login-link:hover {
@@ -83,7 +83,7 @@ input[type=submit] {
 
 .post-heading {
     position: relative;
-    border-bottom: 3px solid #666;
+    /*border-bottom: 3px solid #000000;*/
 }
 
 .post-title {
@@ -92,14 +92,15 @@ input[type=submit] {
 }
 
 .post-date {
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
-    color: #999;
+    position: left;
+    left: 0px;
+    bottom: -10px;
+    color: #FF0000;
 
 }
 
 .post-content {
     margin-top: 5px;
+    color: #FF4500;
 }
 

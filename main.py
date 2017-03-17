@@ -9,16 +9,13 @@ import hmac
 import time
 
 from string import letters
-from google.appengine.ext import ndb
+from google.appengine.ext import db
 
 secret = 'thecatinthehat'
 #template loading code, locations of the templates
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
-
-
-
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
@@ -32,16 +29,13 @@ def check_secure_val(secure_val):
         return val
 
 class BlogHandler(webapp2.RequestHandler):
-    #code to automatically write or type self.response.out.write
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
-    #takes template name and dictionary of parameters to substitue into the template       
     def render_str(self, template, **params):
-        t = jinja_env.get_template(template)
-        return t.render(params)
+        params['user'] = self.user
+        return render_str(template, **params)
 
-    # render calls out write and render_str to print out the template
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
@@ -56,7 +50,7 @@ class BlogHandler(webapp2.RequestHandler):
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
-        self.set_secure_cookie('user_id', str(user.key.id()))
+        self.set_secure_cookie('user_id', str(user.key().id()))
 
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
@@ -74,8 +68,8 @@ class MainPage(BlogHandler):
   def get(self):
       self.write('Hello, Udacity!')
 
-##### user ##################################################
 
+##### user stuff
 def make_salt(length = 5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
@@ -90,92 +84,70 @@ def valid_pw(name, password, h):
     return h == make_pw_hash(name, password, salt)
 
 def users_key(group = 'default'):
-    return ndb.Key('users', group)
+    return db.Key.from_path('users', group)
 
-#stores user info
-class User(ndb.Model):
-    name = ndb.StringProperty(required = True)
-    pw_hash = ndb.StringProperty(required = True)
-    email = ndb.StringProperty()
+class User(db.Model):
+    name = db.StringProperty(required = True)
+    pw_hash = db.StringProperty(required = True)
+    email = db.StringProperty()
 
-#Returns user id from User object
     @classmethod
-    def by_id(self, uid):
+    def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())
 
-#Fetchs users by name from the User object
     @classmethod
-    # def by_name(self, name):
-    #   u = User.query().filter(ndb.GenericProperty('name'), name).get()
-    #   return u
-
-    #alternative method to the above code
     def by_name(cls, name):
-        user = User.query(User.name==name).fetch(1)
-        for u in user:
-            return u    
+        u = User.all().filter('name =', name).get()
+        return u
 
-#Creates the new user in the User object.
     @classmethod
-    def register(self, name, pw, email = None):
+    def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
         return User(parent = users_key(),
                     name = name,
                     pw_hash = pw_hash,
                     email = email)
 
-#Login in Method
     @classmethod
-    def login(self, name, pw):
-        u = self.by_name(name)
+    def login(cls, name, pw):
+        u = cls.by_name(name)
         if u and valid_pw(name, pw, u.pw_hash):
             return u
-  
-  ###Blog Area########################################
+
+
+##### blog stuff
 
 def blog_key(name = 'default'):
-    return ndb.Key('blogs', name)
+    return db.Key.from_path('blogs', name)
 
-#This creates the attributes within the datastore
-class Post(ndb.Model):
-    subject = ndb.StringProperty(required = True)
-    content = ndb.TextProperty(required = True)
-    created = ndb.DateTimeProperty(auto_now_add = True)
-    author = ndb.KeyProperty(kind="User")
-    last_modified = ndb.DateTimeProperty(auto_now = True)
-    
+class Post(db.Model):
+    subject = db.StringProperty(required = True)
+    content = db.TextProperty(required = True)
+    user_id = db.IntegerProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    last_modified = db.DateTimeProperty(auto_now = True)
+    like = db.StringProperty()
 
 
-#keeps line separatated when typing in new blog with spacing  
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
-        
+
 class BlogFront(BlogHandler):
     def get(self):
-        posts = Post.query().order(-Post.created)
-        self.render("front.html", posts = posts)
+        posts = greetings = Post.all().order('-created')
+        self.render('front.html', posts = posts)
 
 class PostPage(BlogHandler):
     def get(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
 
         if not post:
             self.error(404)
             return
 
         self.render("permalink.html", post = post)
-
-    def post(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
-
-        if not post:
-            self.error(404)
-            return
-        self.render('post.html', posts=posts)
-    
 
 class NewPost(BlogHandler):
     def get(self):
@@ -192,139 +164,65 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content, author = self.user.key)
+            p = Post(parent = blog_key(), user_id=self.user.key().id(),
+            subject = subject, content = content)
             p.put()
-            self.redirect('/blog/%s' % str(p.key.integer_id()))
+            self.redirect('/blog/%s' % str(p.key().id()))
         else:
-            error = "You need to enter subject and content!"
+            error = "subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
-
-class EditPost(BlogHandler):
-    def get(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent = blog_key())
-        post = key.get()    
-
-        if self.user:
-            if post.author.id() != self.user.key.id():
-                self.redirect('/blog/' % str(post.key.id()))
-            else:
-                self.render('editpost.html', subject=post.subject, 
-                            content=post.content)
-        else: 
-            error='Please login first'
-            self.render('login.html',error=error)
-
-    def post(self, post_id):
-        if not self.user:
-            return self.redirect('/login')
-
-        key = ndb.Key('Post', int(post_id), parent = blog_key())
-        post = key.get()
-        userid = self.read_secure_cookie('user_id')
-        subject = self.request.get('subject')
-        content = self.request.get('post_text')
-
-        if subject and content:
-            post.subject = subject
-            post.content = content
-            post.put()
-            time.sleep(0.1)
-            self.redirect('/')
-        else:
-            error = "Please enter Subject and Content"
-            self.render("editpost.html",
-                        subject=subject,
-                        content=content,
-                        error=error)
-
 
 class DeletePost(BlogHandler):
     def get(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent = blog_key())
-        post = key.get()
-        if not post:
-            self.error(404)
-            return
         if self.user:
-            self.render('deletepost.html', post=post)
-        else:
-            error = "Please login first"
-            self.render('login.html', error=error)
-
-    def post(self,post_id):
-        if not self.user:
-            return self.redirect('/login')
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
-
-        if post and (post.author.id() == self.user.key.id()):
-            post.key.delete()
-            time.sleep(0.1)
-        self.redirect('/blog')
-
-class LikePost(BlogHandler):
-    def get(self, post_id):
-        if not self.user:
-            return self.redirect('/login')
-
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
-
-        if not post:
-            self.error(404)
-            return
-
-        like_obj = Like.query(Like.post == post.key).get()
-
-        if post.author == self.user.key:
-            self.write("You can't like your own post")
-        else:
-            if like_obj:
-                authors = like_obj.author
-                for author in authors:
-                    if(author == self.user.key):
-                        return self.redirect("/blog/%s" % str(post.key.id()))
-                like_obj.like_count += 1
-                authors.append(self.user.key)
-                like_obj.put()
-                self.redirect('/')
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            if post.user_id == self.user.key().id():
+                post.delete()
+                time.sleep(0.1)
+                self.redirect("/blog/")
             else:
-                like_obj = Like(post=post.key, like_count=1)
-                like_obj.author.append(self.user.key)
-                like_obj.put()
-                self.redirect('/')
-
-
-# Unlike Post
-class UnlikePost(BlogHandler):
-    def get(self, post_id):
-        key = ndb.Key('Post', int(post_id), parent=blog_key())
-        post = key.get()
-
-        if not post:
-            self.error(404)
-            return
-
-        if not self.user:
-            self.redirect('/login')
-            return
-
-        like_obj = Like.query(Like.post == post.key).get()
-
-        if like_obj:
-            authors = like_obj.author
-            for author in authors:
-                if author == self.user.key:
-                    like_obj.author.remove(author)
-                    flag = True
-                if not flag:
-                    self.redirect('/blog/%s' % str(post.key.id()))
-                else:
-                    self.write("user doesn't exist")
+                self.redirect("/blog/" + post_id + "?error=You don't have " +
+                              "access to delete this record.")
         else:
-            self.write("No Like object created")
+            self.redirect("/login?error=You need to be logged, in order" +
+                          " to delete your post!!")
 
-    
+
+class EditPost(BlogHandler):
+    def get(self, post_id):
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            if post.user_id == self.user.key().id():
+                self.render("editpost.html", subject=post.subject,
+                            content=post.content)
+            else:
+                self.redirect("/blog/" + post_id + "?error=You don't have " +
+                              "access to edit this record.")
+        else:
+            self.redirect("/login?error=You need to be logged, " +
+                          "in order to edit your post!!")
+    def post(self, post_id):
+        
+        if not self.user:
+            self.redirect('/blog')
+
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+
+        if subject and content:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+            post.subject = subject
+            post.content = content
+            post.put()
+            self.redirect('/blog/%s' % post_id)
+        else:
+            error = "subject and content missing"
+            self.render("editpost.html", subject=subject,
+                        content=content, error=error)
+
 
 ###### Unit 2 HW's
 class Rot13(BlogHandler):
@@ -402,10 +300,10 @@ class Register(Signup):
             self.render('signup-form.html', error_username = msg)
         else:
             u = User.register(self.username, self.password, self.email)
-            key = u.put()
+            u.put()
 
             self.login(u)
-            self.redirect('/unit3/welcome')
+            self.redirect('/blog')
 
 class Login(BlogHandler):
     def get(self):
@@ -418,7 +316,7 @@ class Login(BlogHandler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/unit3/welcome')
+            self.redirect('/blog')
         else:
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
@@ -426,7 +324,7 @@ class Login(BlogHandler):
 class Logout(BlogHandler):
     def get(self):
         self.logout()
-        self.redirect('/signup')
+        self.redirect('/blog')
 
 class Unit3Welcome(BlogHandler):
     def get(self):
@@ -444,6 +342,8 @@ class Welcome(BlogHandler):
             self.redirect('/unit2/signup')
 
 
+
+
 app = webapp2.WSGIApplication([('/', MainPage),
                                ('/unit2/rot13', Rot13),
                                ('/unit2/signup', Unit2Signup),
@@ -451,8 +351,6 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/blog/?', BlogFront),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
-                               ('/blog/like/([0-9]+)', LikePost),
-                               ('/blog/unlike/([0-9]+)', UnlikePost),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
