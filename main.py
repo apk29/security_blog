@@ -29,13 +29,16 @@ def check_secure_val(secure_val):
         return val
 
 class BlogHandler(webapp2.RequestHandler):
+
     #code to automatically write or type self.response.out.write
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
+
     #takes template name and dictionary of parameters to substitue into the template 
     def render_str(self, template, **params):
         params['user'] = self.user
         return render_str(template, **params)
+
     # render calls out write and render_str to print out the template
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
@@ -71,9 +74,11 @@ class MainPage(BlogHandler):
 
 
 ##### user ##################################################
+#make salt to secure password
 def make_salt(length = 5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
+# create password hash with name, password and the salt
 def make_pw_hash(name, pw, salt = None):
     if not salt:
         salt = make_salt()
@@ -86,20 +91,24 @@ def valid_pw(name, password, h):
 
 def users_key(group = 'default'):
     return db.Key.from_path('users', group)
+
 #stores user info
 class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     email = db.StringProperty()
+
 #Returns user id from User object
     @classmethod
     def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())
+
 #Fetchs users by name from the User object
     @classmethod
     def by_name(cls, name):
         u = User.all().filter('name =', name).get()
         return u
+
 #Creates the new user in the User object.
     @classmethod
     def register(cls, name, pw, email = None):
@@ -137,6 +146,7 @@ class Comment(db.Model):
 
 def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
+
 #This creates the attributes within the datastore
 class Post(db.Model):
     subject = db.StringProperty(required = True)
@@ -148,6 +158,7 @@ class Post(db.Model):
     def gertUserName(self):
         user = User.by_id(self.user_id)
         return user.name
+
 #keeps line separatated when typing in new blog with spacing 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
@@ -186,11 +197,10 @@ class PostPage(BlogHandler):
             self.error(404)
             return
 
-       
         c = ""
 
         if(self.user):
-            # On clicking like, post-like value increases.
+            # clicking like will make post-like value increases.
             if(self.request.get('like') and
                self.request.get('like') == "update"):
                 time.sleep(0.01)
@@ -200,9 +210,10 @@ class PostPage(BlogHandler):
 
                 if self.user.key().id() == post.user_id:
                     self.redirect("/blog/" + post_id +
-                                  "?error=You cannot like your " +
+                                  "?error=You cannot like your own" +
                                   "post.!!")
                     return
+                
                 elif likes.count() == 0:
                     l = Like(parent=blog_key(), user_id=self.user.key().id(),
                              post_id=int(post_id))
@@ -281,7 +292,7 @@ class DeleteComment(BlogHandler):
                 self.redirect("/blog/" + post_id + "?error=You don't have " +
                               "access to delete this comment.")
         else:
-            self.redirect("/login?error=You need to be logged, in order to " +
+            self.redirect("/login?error=You need to be logged in , in order to " +
                           "delete your comment!!")
 
 class EditComment(BlogHandler):
@@ -324,19 +335,20 @@ class EditPost(BlogHandler):
         if self.user:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
-            if post.user_id == self.user.key().id():
+
+            if self.user and self.user.key().id() == post.user_id:
                 self.render("editpost.html", subject=post.subject,
                             content=post.content)
             else:
                 self.redirect("/blog/" + post_id + "?error=You don't have " +
                               "access to edit this record.")
         else:
-            self.redirect("/login?error=You need to be logged, " +
+            self.redirect("/login?error=You need to be logged in, " +
                           "in order to edit your post!!")
     def post(self, post_id):
         
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -344,29 +356,18 @@ class EditPost(BlogHandler):
         if subject and content:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
+
             post.subject = subject
             post.content = content
+
             post.put()
+
             self.redirect('/blog/%s' % post_id)
+
         else:
-            error = "subject and content missing"
+            error = "subject and content needs to be entered!"
             self.render("editpost.html", subject=subject,
                         content=content, error=error)
-
-
-###### Unit 2 HW's
-class Rot13(BlogHandler):
-    def get(self):
-        self.render('rot13-form.html')
-
-    def post(self):
-        rot13 = ''
-        text = self.request.get('text')
-        if text:
-            rot13 = text.encode('rot13')
-
-        self.render('rot13-form.html', text = rot13)
-
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
@@ -421,7 +422,7 @@ class Register(Signup):
     def done(self):
         u = User.by_name(self.username)
         if u:
-            msg = 'That user already exists.'
+            msg = 'This is an existing user.'
             self.render('signup-form.html', error_username = msg)
         else:
             u = User.register(self.username, self.password, self.email)
@@ -465,9 +466,6 @@ class Welcome(BlogHandler):
             self.render('welcome.html', username = username)
         else:
             self.redirect('/unit2/signup')
-
-
-
 
 app = webapp2.WSGIApplication([('/', MainPage),
                                ('/welcome', Welcome),
