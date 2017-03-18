@@ -29,13 +29,14 @@ def check_secure_val(secure_val):
         return val
 
 class BlogHandler(webapp2.RequestHandler):
+    #code to automatically write or type self.response.out.write
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
-
+    #takes template name and dictionary of parameters to substitue into the template 
     def render_str(self, template, **params):
         params['user'] = self.user
         return render_str(template, **params)
-
+    # render calls out write and render_str to print out the template
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
@@ -69,7 +70,7 @@ class MainPage(BlogHandler):
       self.write('Hello, Udacity!')
 
 
-##### user stuff
+##### user ##################################################
 def make_salt(length = 5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
@@ -85,21 +86,21 @@ def valid_pw(name, password, h):
 
 def users_key(group = 'default'):
     return db.Key.from_path('users', group)
-
+#stores user info
 class User(db.Model):
     name = db.StringProperty(required = True)
     pw_hash = db.StringProperty(required = True)
     email = db.StringProperty()
-
+#Returns user id from User object
     @classmethod
     def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())
-
+#Fetchs users by name from the User object
     @classmethod
     def by_name(cls, name):
         u = User.all().filter('name =', name).get()
         return u
-
+#Creates the new user in the User object.
     @classmethod
     def register(cls, name, pw, email = None):
         pw_hash = make_pw_hash(name, pw)
@@ -132,11 +133,11 @@ class Comment(db.Model):
     def getUserName(self):
         user = User.by_id(self.user_id)
         return user.name
-##### blog stuff
+###Blog Area########################################
 
 def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
-
+#This creates the attributes within the datastore
 class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
@@ -147,15 +148,16 @@ class Post(db.Model):
     def gertUserName(self):
         user = User.by_id(self.user_id)
         return user.name
-
+#keeps line separatated when typing in new blog with spacing 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
 
 class BlogFront(BlogHandler):
     def get(self):
+        deleted_post_id = self.request.get('deleted_post_id')
         posts = greetings = Post.all().order('-created')
-        self.render('front.html', posts = posts)
+        self.render('front.html', posts = posts, deleted_post_id=deleted_post_id)
 
 class PostPage(BlogHandler):
     def get(self, post_id):
@@ -299,9 +301,7 @@ class EditComment(BlogHandler):
                           " edit your post!!")
 
     def post(self, post_id, comment_id):
-        """
-            Updates post.
-        """
+        
         if not self.user:
             self.redirect('/blog')
 
@@ -417,13 +417,8 @@ class Signup(BlogHandler):
     def done(self, *a, **kw):
         raise NotImplementedError
 
-class Unit2Signup(Signup):
-    def done(self):
-        self.redirect('/unit2/welcome?username=' + self.username)
-
 class Register(Signup):
     def done(self):
-        #make sure the user doesn't already exist
         u = User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
@@ -475,9 +470,7 @@ class Welcome(BlogHandler):
 
 
 app = webapp2.WSGIApplication([('/', MainPage),
-                               ('/unit2/rot13', Rot13),
-                               ('/unit2/signup', Unit2Signup),
-                               ('/unit2/welcome', Welcome),
+                               ('/welcome', Welcome),
                                ('/blog/?', BlogFront),
                                ('/blog/([0-9]+)', PostPage),
                                ('/blog/newpost', NewPost),
