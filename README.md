@@ -16,7 +16,7 @@ Deploy project with gcloud app deploy.
 View your project at unique-name.appspot.com.
 You should see “Hello World!”
 When developing locally, you can use dev_appserver.py to run a copy of your app on your own computer, and access it at http://localhost:8080/.
-Install Jinja and create helper functions for using Jinja, follow the directions here.
+Install Jinja and create helper functions for using Jinja.
 If you’re unfamiliar with Jinja watch Lesson 2 and/or check out the docs.
 
 Step 1: Create a Basic Blog.
