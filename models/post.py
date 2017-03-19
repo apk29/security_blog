@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from helpers import *
 
 #This creates the attributes within the datastore
 class Post(db.Model):
@@ -11,3 +12,8 @@ class Post(db.Model):
     def gertUserName(self):
         user = User.by_id(self.user_id)
         return user.name
+
+        #keeps line separatated when typing in new blog with spacing 
+	def render(self):
+        self._render_text = self.content.replace('\n', '<br>')
+        return render_str("post.html", p = self)
