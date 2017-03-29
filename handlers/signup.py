@@ -2,6 +2,8 @@ from handlers.blog import BlogHandler
 from models.user import User
 from helpers import *
 
+
+            
 class Signup(BlogHandler):
     def get(self):
         self.render("signup-form.html")

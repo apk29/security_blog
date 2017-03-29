@@ -14,6 +14,6 @@ class Post(db.Model):
         return user.name
 
         #keeps line separatated when typing in new blog with spacing 
-	def render(self):
+    def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
