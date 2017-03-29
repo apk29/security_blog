@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from models.user import User
 
 class Comment(db.Model):
     user_id = db.IntegerProperty(required=True)
