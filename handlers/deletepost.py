@@ -7,6 +7,9 @@ class DeletePost(BlogHandler):
         if self.user:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
+
+            if not post:
+                self.redirect("/blog/")
             if post.user_id == self.user.key().id():
                 post.delete()
                 time.sleep(0.1)
