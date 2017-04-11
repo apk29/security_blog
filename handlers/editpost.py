@@ -8,6 +8,10 @@ class EditPost(BlogHandler):
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
 
+            if not post:
+                self.error(404)
+                return
+
             if self.user and self.user.key().id() == post.user_id:
                 self.render("editpost.html", subject=post.subject,
                             content=post.content)

@@ -50,8 +50,8 @@ label + label {
 }
 
 input[type=text] {
-    width: 500px;
-    font-size: 20px;
+    width: 165px;
+    font-size: 12px;
     padding: 2px;
     font-family: monospace;
 }
