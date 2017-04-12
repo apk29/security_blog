@@ -35,11 +35,14 @@ class EditPost(BlogHandler):
 
             if subject and content:
                 key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-                post = db.get(key)
-
+                
                 post.subject = subject
                 post.content = content
 
+                if self.user.key().id() == post.user_id:
+                    self.render("editpost.html", subject=post.subject,
+                            content=post.content)
+                    
                 post.put()
 
                 self.redirect('/blog/%s' % post_id)
