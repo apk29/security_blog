@@ -44,7 +44,7 @@ class PostPage(BlogHandler):
                 if self.user.key().id() == post.user_id:
                     self.redirect("/blog/" + post_id +
                                   "?error=You cannot like your own" +
-                                  "post.!!")
+                                  " post.!!")
                     return
                 
                 elif likes.count() == 0:
