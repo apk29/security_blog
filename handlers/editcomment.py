@@ -8,6 +8,11 @@ class EditComment(BlogHandler):
             key = db.Key.from_path('Comment', int(comment_id),
                                    parent=blog_key())
             c = db.get(key)
+            
+            if not c:
+                self.error(404)
+                return
+
             if c.user_id == self.user.key().id():
                 self.render("editcomment.html", comment=c.comment)
             else:
@@ -29,6 +34,11 @@ class EditComment(BlogHandler):
             key = db.Key.from_path('Comment',
                                    int(comment_id), parent=blog_key())
             c = db.get(key)
+
+            if not c:
+                self.error(404)
+                return
+
             c.comment = comment
             c.put()
             self.redirect('/blog/%s' % post_id)

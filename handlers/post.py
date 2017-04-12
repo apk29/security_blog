@@ -57,6 +57,7 @@ class PostPage(BlogHandler):
                             post_id=int(post_id),
                             comment=self.request.get('comment'))
                 c.put()
+                time.sleep(0.01)
         else:
             self.redirect("/login?error=You need to login before " +
                           "performing edit, like or commenting.!!")

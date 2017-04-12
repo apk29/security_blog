@@ -12,7 +12,7 @@ class EditPost(BlogHandler):
                 self.error(404)
                 return
 
-            if self.user and self.user.key().id() == post.user_id:
+            if self.user.key().id() == post.user_id:
                 self.render("editpost.html", subject=post.subject,
                             content=post.content)
             else:
@@ -22,9 +22,13 @@ class EditPost(BlogHandler):
             self.redirect("/login?error=You need to be logged in, " +
                           "in order to edit your post!!")
     def post(self, post_id):
-        
-        if not self.user:
-            self.redirect('/login')
+        if self.user:
+            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+            post = db.get(key)
+
+            if not post:
+                self.error(404)
+                return
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -32,6 +36,10 @@ class EditPost(BlogHandler):
         if subject and content:
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
+
+            if not post:
+                self.error(404)
+                return
 
             post.subject = subject
             post.content = content
