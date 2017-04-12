@@ -30,25 +30,21 @@ class EditPost(BlogHandler):
                 self.error(404)
                 return
 
-        subject = self.request.get('subject')
-        content = self.request.get('content')
+            subject = self.request.get('subject')
+            content = self.request.get('content')
 
-        if subject and content:
-            key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-            post = db.get(key)
+            if subject and content:
+                key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+                post = db.get(key)
 
-            if not post:
-                self.error(404)
-                return
+                post.subject = subject
+                post.content = content
 
-            post.subject = subject
-            post.content = content
+                post.put()
 
-            post.put()
+                self.redirect('/blog/%s' % post_id)
 
-            self.redirect('/blog/%s' % post_id)
-
-        else:
-            error = "subject and content needs to be entered!"
-            self.render("editpost.html", subject=subject,
+            else:
+                error = "subject and content needs to be entered!"
+                self.render("editpost.html", subject=subject,
                         content=content, error=error)
