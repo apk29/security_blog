@@ -46,13 +46,6 @@ class EditComment(BlogHandler):
                               "?error=You don't have access to edit this " +
                               "comment.")
 
-            if c.user_id == self.user.key().id():
-                self.render("editcomment.html", comment=c.comment)
-            else: 
-                self.redirect("/blog/" + post_id +
-                              "?error=You don't have access to edit this " +
-                              "comment.")
-
             c.comment = comment
             c.put()
             self.redirect('/blog/%s' % post_id)
