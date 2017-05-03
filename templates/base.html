@@ -1,34 +1,37 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <link type="text/css" rel="stylesheet" href="/static/main.css" />
-
-  <title>Multi User Blog</title>
+  <html>
+    <head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link href="/static/main.css" rel="stylesheet">
+        <title>Multi User Blog</title>
 </head>
+  <body>
 
-<body>
-  <a href="/blog" class="main-title">
-    Multi User Blog
-  </a>
-
-  <div class="login-area">
-    {% if user %}
-     Hello {{user.name}}!<br> <br>
-     <b><a class="login-link" href="/blog/newpost">New Post</a></b> <b>|
-     </b> <b><a class="login-link" href="/logout">logout</a></b>
-    {% else %}
-      <a class="login-link" href="/login">login</a>
-      |
-      <a class="login-link" href="/signup">signup</a>
-    {% endif %}
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand">Multi User Blog</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="/blog">Home</a></li>
+      
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+     {% if user %}
+      <li><a href="/blog/newpost"><span class="glyphicon glyphicon-pencil"></span> New Post</a></li>
+      <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+      {% else %}
+      <li><a href="/signup"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
+      <li><a href="/login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+       {% endif %}
+    </ul>
   </div>
-<br>
-<br>
-  <div id="content">
-  {% block content %}
-  {% endblock %}
-  </div>
-</body>
+</nav>
+<ul class="list-group">
+  <li class="list-group-item">{% block content %}
+            {% endblock %}</li>
+  
+</ul>
 
+          </body>
 </html>
-

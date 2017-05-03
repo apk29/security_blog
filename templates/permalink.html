@@ -10,15 +10,11 @@
 </div>
 {{post.render() | safe}}
 <br>
-<div class="col-md-6">
+<form method="post" role="form">
+
    <a id="post-delete" class="btn btn-primary" href="/blog/deletepost/{{post.key().id()}}">Delete</a>
    <a id="post-edit" class="btn btn-primary" href="/blog/editpost/{{post.key().id()}}">Edit</a>
-</div>
-<br>
-<div class="row">
-   <div class="sub-work col-md-12">
-      <form method="post" role="form">
-         <input type="hidden" class="form-control" id="like" name="like" value="update">
+   <input type="hidden" class="form-control" id="like" name="like" value="update">
          <button type="submit" class="btn btn-primary">Like {{NOL}}</button>
       </form>
    </div>
@@ -29,21 +25,28 @@
             <label for="comment">Comment:</label>
             <input type="text" class="form-control" id="comment" name="comment" value="">
          </div>
-         <br>
+         
          <button type="submit" class="btn btn-success">Submit</button>
       </form>
    </div>
+   
+   <br>
+
+   <form method="post" role="form">
    <div class="sub-work col-md-12">
       {% for c in comments %}
       <blockquote>
-         <a class="comment-delete btn btn"
+         <a class="comment-delete btn btn-primary"
          href="/blog/deletecomment/{{post.key().id()}}/{{c.key().id()}}">Delete</a>
+         
          <a class="comment-edit btn btn-primary" 
          href="/blog/editcomment/{{post.key().id()}}/{{c.key().id()}}">Edit</a>
          <p>{{ c.comment }}</p>
          <footer>{{ c.getUserName() }}</footer>
       </blockquote>
+      </form>
       {% endfor %}
    </div>
 </div>
 {% endblock %}
+

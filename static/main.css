@@ -9,26 +9,35 @@ body {
     color: #333;
 }
 
+nav.navbar.navbar-inverse {
+  border-radius: 0;
+  margin-bottom: 0;
+  
+  color: #fff;
+  border: none;
+  padding: 5px;
+}
+
 .login-area {
     font-size: 13px;
-    color: #0000FF;
+    color: #fff;
     position: absolute;
     top: 10px;
     right: 10px;
 }
 
-.login-link {
+/*.login-link {
     color: gray;
     text-decoration: none;
-}
+}*/
 
-.login-link:visited {
-    color: #A52A2A;
-}
+/*.login-link:visited {
+    color: #fff;
+}*/
 
-.login-link:hover {
+/*.login-link:hover {
     text-decoration: underline;
-}
+}*/
 
 h2 {
     font-size: 24px;
@@ -75,10 +84,9 @@ input[type=submit] {
 .main-title {
     display: block;
     color: #222;
-    font-size: 40px;
+    font-size: 30px;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 30px;
     text-decoration: none;
 }
 
@@ -88,24 +96,25 @@ input[type=submit] {
 
 .post-heading {
     position: relative;
-    /*border-bottom: 3px solid #000000;*/
+    border-bottom: 1px solid  #C0C0C0;
 }
 
 .post-title {
     font-size: 24px;
     font-weight: bold;
+    color: #222;
 }
 
 .post-date {
     position: left;
     left: 0px;
     bottom: -10px;
-    color: #FF0000;
+    color: #505050;
 
 }
 
 .post-content {
     margin-top: 5px;
-    color: #FF4500;
+    color: #505050;
 }
 
