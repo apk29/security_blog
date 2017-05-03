@@ -2,6 +2,7 @@ from google.appengine.ext import db
 from handlers.blog import BlogHandler
 from helpers import *
 from models.comment import Comment
+from models.like import Like
 
 class PostPage(BlogHandler):
     def get(self, post_id):
