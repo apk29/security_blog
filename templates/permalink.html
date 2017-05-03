@@ -12,10 +12,10 @@
 <br>
 <form method="post" role="form">
 
-   <a id="post-delete" class="btn btn-primary" href="/blog/deletepost/{{post.key().id()}}">Delete</a>
-   <a id="post-edit" class="btn btn-primary" href="/blog/editpost/{{post.key().id()}}">Edit</a>
+   <button><a id="post-delete" href="/blog/deletepost/{{post.key().id()}}">Delete</a></button>
+   <button><a id="post-edit" href="/blog/editpost/{{post.key().id()}}">Edit</a></button>
    <input type="hidden" class="form-control" id="like" name="like" value="update">
-         <button type="submit" class="btn btn-primary">Like {{NOL}}</button>
+         <button type="submit">Like {{NOL}}</button>
       </form>
    </div>
    <br>
@@ -26,21 +26,24 @@
             <input type="text" class="form-control" id="comment" name="comment" value="">
          </div>
          
-         <button type="submit" class="btn btn-success">Submit</button>
+         <button type="submit">Submit</button>
       </form>
    </div>
    
    <br>
 
    <form method="post" role="form">
+       <h4>
    <div class="sub-work col-md-12">
       {% for c in comments %}
       <blockquote>
-         <a class="comment-delete btn btn-primary"
-         href="/blog/deletecomment/{{post.key().id()}}/{{c.key().id()}}">Delete</a>
-         
-         <a class="comment-edit btn btn-primary" 
-         href="/blog/editcomment/{{post.key().id()}}/{{c.key().id()}}">Edit</a>
+         <br>
+         <button><a href="/blog/deletecomment/{{post.key().id()}}/{{c.key().id()}}">
+         Delete</a></button>
+         &nbsp;
+         <button><a href="/blog/editcomment/{{post.key().id()}}/{{c.key().id()}}">
+         Edit</a></button>
+         <br><br>
          <p>{{ c.comment }}</p>
          <footer>{{ c.getUserName() }}</footer>
       </blockquote>
